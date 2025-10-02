@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Своя игра: Информатика</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a0033 0%, #330066 50%, #1a0033 100%);
+            color: white;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+        
+        .container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            text-shadow: 0 0 20px #9d4edd, 0 0 40px #9d4edd;
+            margin-bottom: 20px;
+        }
+        
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .team {
+            background: rgba(138, 43, 226, 0.3);
+            border: 2px solid #9d4edd;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+        }
+        
+        .team h3 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .team .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #c77dff;
+        }
+        
+        .game-board {
+            display: none;
+        }
+        
+        .game-board.active {
+            display: block;
+        }
+        
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        
+        .category-header {
+            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+            padding: 20px 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.7);
+        }
+        
+        .question-cell {
+            background: rgba(128, 0, 128, 0.6);
+            border: 2px solid #9d4edd;
+            padding: 30px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .question-cell:hover:not(.used) {
+            background: rgba(157, 78, 221, 0.8);
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(157, 78, 221, 0.9);
+        }
+        
+        .question-cell.used {
+            background: rgba(80, 80, 80, 0.5);
+            border-color: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .question-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            padding: 40px;
+        }
+        
+        .question-screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .question-content {
+            background: linear-gradient(135deg, #3c096c, #5a189a);
+            border: 3px solid #9d4edd;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(157, 78, 221, 0.8);
+        }
+        
+        .question-text {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .meme-hint {
+            font-size: 1.2em;
+            color: #c77dff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .timer {
+            font-size: 2.5em;
+            text-align: center;
+            margin: 20px 0;
+            color: #ff006e;
+            text-shadow: 0 0 10px #ff006e;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-team {
+            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+            color: white;
+        }
+        
+        .btn-team:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.6);
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #ba55d3, #c77dff);
+            color: white;
+        }
+        
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(199, 125, 255, 0.6);
+        }
+        
+        .btn-timer {
+            background: linear-gradient(135deg, #ff006e, #ff4d8f);
+            color: white;
+        }
+        
+        .results-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0033 0%, #4a0080 100%);
+            z-index: 2000;
+            padding: 40px;
+        }
+        
+        .results-screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .results-content {
+            text-align: center;
+        }
+        
+        .results-content h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 0 0 30px #9d4edd;
+        }
+        
+        .final-scores {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .final-team {
+            background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 1.8em;
+            box-shadow: 0 0 25px rgba(157, 78, 221, 0.7);
+        }
+        
+        .final-team.winner {
+            background: linear-gradient(135deg, #ffd60a, #ffc300);
+            color: #000;
+            transform: scale(1.1);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1.1); }
+            50% { transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 СВОЯ ИГРА: ИНФОРМАТИКА 🎮</h1>
+        </div>
+        
+        <div class="scoreboard">
+            <div class="team">
+                <h3>Команда 1</h3>
+                <div class="score" id="score1">0</div>
+            </div>
+            <div class="team">
+                <h3>Команда 2</h3>
+                <div class="score" id="score2">0</div>
+            </div>
+            <div class="team">
+                <h3>Команда 3</h3>
+                <div class="score" id="score3">0</div>
+            </div>
+            <div class="team">
+                <h3>Команда 4</h3>
+                <div class="score" id="score4">0</div>
+            </div>
+        </div>
+        
+        <div class="game-board active" id="gameBoard">
+            <div class="categories">
+                <div class="category-header">Компьютер</div>
+                <div class="category-header">Игры</div>
+                <div class="category-header">Интернет</div>
+                <div class="category-header">Железо</div>
+                <div class="category-header">Мемы IT</div>
+                
+                <div class="question-cell" data-category="0" data-points="100">100</div>
+                <div class="question-cell" data-category="1" data-points="100">100</div>
+                <div class="question-cell" data-category="2" data-points="100">100</div>
+                <div class="question-cell" data-category="3" data-points="100">100</div>
+                <div class="question-cell" data-category="4" data-points="100">100</div>
+                
+                <div class="question-cell" data-category="0" data-points="200">200</div>
+                <div class="question-cell" data-category="1" data-points="200">200</div>
+                <div class="question-cell" data-category="2" data-points="200">200</div>
+                <div class="question-cell" data-category="3" data-points="200">200</div>
+                <div class="question-cell" data-category="4" data-points="200">200</div>
+                
+                <div class="question-cell" data-category="0" data-points="300">300</div>
+                <div class="question-cell" data-category="1" data-points="300">300</div>
+                <div class="question-cell" data-category="2" data-points="300">300</div>
+                <div class="question-cell" data-category="3" data-points="300">300</div>
+                <div class="question-cell" data-category="4" data-points="300">300</div>
+                
+                <div class="question-cell" data-category="0" data-points="400">400</div>
+                <div class="question-cell" data-category="1" data-points="400">400</div>
+                <div class="question-cell" data-category="2" data-points="400">400</div>
+                <div class="question-cell" data-category="3" data-points="400">400</div>
+                <div class="question-cell" data-category="4" data-points="400">400</div>
+                
+                <div class="question-cell" data-category="0" data-points="500">500</div>
+                <div class="question-cell" data-category="1" data-points="500">500</div>
+                <div class="question-cell" data-category="2" data-points="500">500</div>
+                <div class="question-cell" data-category="3" data-points="500">500</div>
+                <div class="question-cell" data-category="4" data-points="500">500</div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-back" onclick="showResults()">📊 Показать итоги</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="question-screen" id="questionScreen">
+        <div class="question-content">
+            <div class="question-text" id="questionText"></div>
+            <div class="meme-hint" id="memeHint"></div>
+            <div class="timer" id="timer">60</div>
+            <div class="button-group">
+                <button class="btn btn-timer" onclick="startTimer()">▶️ Старт таймер</button>
+                <button class="btn btn-timer" onclick="stopTimer()">⏸️ Стоп</button>
+                <button class="btn btn-timer" onclick="resetTimer()">🔄 Сброс</button>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-team" onclick="addPoints(1)">+Баллы Команда 1</button>
+                <button class="btn btn-team" onclick="addPoints(2)">+Баллы Команда 2</button>
+                <button class="btn btn-team" onclick="addPoints(3)">+Баллы Команда 3</button>
+                <button class="btn btn-team" onclick="addPoints(4)">+Баллы Команда 4</button>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-back" onclick="closeQuestion()">◀️ Назад к таблице</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="results-screen" id="resultsScreen">
+        <div class="results-content">
+            <h2>🏆 ИТОГИ ИГРЫ 🏆</h2>
+            <div class="final-scores" id="finalScores"></div>
+            <button class="btn btn-back" style="margin-top: 20px;" onclick="hideResults()">◀️ Назад к игре</button>
+        </div>
+    </div>
+    
+    <script>
+        const scores = [0, 0, 0, 0];
+        let currentPoints = 0;
+        let timerInterval = null;
+        let timeLeft = 60;
+        let currentCell = null;
+        
+        const questions = {
+            0: { // Компьютер
+                100: {q: "Как называется основная микросхема компьютера?", meme: "окак, это же ЦП"},
+                200: {q: "Сколько бит в одном байте?", meme: "8, как восьмёрка в Мессенджер Макс"},
+                300: {q: "Какая операционная система от Microsoft?", meme: "Windows, но мы все знаем про тотю и Linux"},
+                400: {q: "Что такое ROM?", meme: "Постоянная память, не путать с RAM"},
+                500: {q: "Что означает CPU?", meme: "Central Processing Unit, окак"}
+            },
+            1: { // Игры
+                100: {q: "В какой игре строят из кубиков?", meme: "Minecraft, окак"},
+                200: {q: "Какая игра про выживание среди предателей на космическом корабле?", meme: "Among Us SUS мем"},
+                300: {q: "В какой игре 100 игроков прыгают с парашютом?", meme: "Battle Royale формат"},
+                400: {q: "Какой движок используется в большинстве современных игр?", meme: "Unreal или Unity"},
+                500: {q: "Что такое FPS в играх?", meme: "Frames Per Second, тотя знает"}
+            },
+            2: { // Интернет
+                100: {q: "Что означает WWW?", meme: "World Wide Web, окак"},
+                200: {q: "Какой протокол используется для защищённых сайтов?", meme: "HTTPS, тотя одобряет"},
+                300: {q: "Что такое IP-адрес?", meme: "Адрес устройства в сети"},
+                400: {q: "Какая социальная сеть самая популярная в России?", meme: "ВКонтакте, Мессенджер Макс тут"},
+                500: {q: "Что такое DNS?", meme: "Domain Name System, переводит имена в IP"}
+            },
+            3: { // Железо
+                100: {q: "Что такое HDD?", meme: "Жёсткий диск, окак"},
+                200: {q: "Какой разъём для видеокарты в материнской плате?", meme: "PCI Express"},
+                300: {q: "Что такое SSD?", meme: "Твердотельный накопитель, быстрее HDD"},
+                400: {q: "Для чего нужна видеокарта?", meme: "Для обработки графики, тотя в курсе"},
+                500: {q: "Что такое материнская плата?", meme: "Основная плата компьютера, всё к ней подключается"}
+            },
+            4: { // Мемы IT
+                100: {q: "Кто такой Мессенджер Макс?", meme: "Легенда мемов 2024-2025"},
+                200: {q: "Что значит 'окак'?", meme: "Популярное выражение из мемов"},
+                300: {q: "Кто такая тотя?", meme: "Персонаж из IT-мемов"},
+                400: {q: "Какой язык программирования используют в мемах про змей?", meme: "Python 🐍"},
+                500: {q: "Что значит 'Hello World'?", meme: "Первая программа любого программиста"}
+            }
+        };
+        
+        function updateScores() {
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`score${i + 1}`).textContent = scores[i];
+            }
+        }
+        
+        function addPoints(team) {
+            scores[team - 1] += currentPoints;
+            updateScores();
+        }
+        
+        function startTimer() {
+            stopTimer();
+            timeLeft = 60;
+            document.getElementById('timer').textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    document.getElementById('timer').textContent = "Время вышло!";
+                }
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        function resetTimer() {
+            stopTimer();
+            timeLeft = 60;
+            document.getElementById('timer').textContent = timeLeft;
+        }
+        
+        function closeQuestion() {
+            stopTimer();
+            if (currentCell) {
+                currentCell.classList.add('used');
+            }
+            document.getElementById('questionScreen').classList.remove('active');
+        }
+        
+        function showResults() {
+            const finalScores = document.getElementById('finalScores');
+            const teams = scores.map((score, i) => ({team: i + 1, score}));
+            teams.sort((a, b) => b.score - a.score);
+            
+            finalScores.innerHTML = teams.map((t, i) => 
+                `<div class="final-team ${i === 0 ? 'winner' : ''}">
+                    ${i === 0 ? '👑 ' : ''}Команда ${t.team}: ${t.score} баллов
+                </div>`
+            ).join('');
+            
+            document.getElementById('resultsScreen').classList.add('active');
+        }
+        
+        function hideResults() {
+            document.getElementById('resultsScreen').classList.remove('active');
+        }
+        
+        document.querySelectorAll('.question-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                if (this.classList.contains('used')) return;
+                
+                currentCell = this;
+                const category = parseInt(this.dataset.category);
+                const points = parseInt(this.dataset.points);
+                currentPoints = points;
+                
+                const q = questions[category][points];
+                document.getElementById('questionText').textContent = q.q;
+                document.getElementById('memeHint').textContent = `💡 ${q.meme}`;
+                resetTimer();
+                
+                document.getElementById('questionScreen').classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
